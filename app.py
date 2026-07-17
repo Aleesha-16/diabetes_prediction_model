@@ -1,42 +1,60 @@
-# app.py
-
 import os
 import gradio as gr
 import joblib
 
-# Load the trained Decision Tree model at startup
-deployed_dt = joblib.load('diabetes_prediction_model.pkl')
+# Load the trained model
+diabetes_model = joblib.load("diabetes_prediction_model.pkl")
 
-# --- CODE BLOCK: PREDICTION LOGIC FOR 5 FEATURES ---
-# x = df[['Pregnancies', 'Glucose', 'Insulin', 'BMI',  'Age']]
-def predict_diabetes(pregnancies, glucose, insulin, bmi, age):
-    # The model expects a 2D array matching the exact order of x_train
-    input_data = [[pregnancies, glucose, insulin, bmi, age]]
-    prediction = deployed_dt.predict(input_data)
-    
-    # Interpret the binary outcome (typically 1 for positive, 0 for negative)
-    if prediction[0] == 1:
-        return "Prediction: High Risk of Diabetes (Positive)"
+
+def predict_diabetes(
+    pregnancies,
+    glucose,
+    blood_pressure,
+    skin_thickness,
+    insulin,
+    bmi,
+    diabetes_pedigree,
+    age,
+):
+    prediction = diabetes_model.predict([[
+        pregnancies,
+        glucose,
+        blood_pressure,
+        skin_thickness,
+        insulin,
+        bmi,
+        diabetes_pedigree,
+        age
+    ]])[0]
+
+    if prediction == 1:
+        return "⚠️ Positive for Diabetes\n\nPlease consult a healthcare professional."
     else:
-        return "Prediction: Low Risk of Diabetes (Negative)"
-# ---------------------------------------------------
+        return "✅ No Diabetes Detected"
 
-# --- CODE BLOCK: GRADIO INTERFACE SETUP ---
+
 interface = gr.Interface(
     fn=predict_diabetes,
     inputs=[
-        gr.Number(label="Pregnancies (Number of times pregnant)"),
-        gr.Number(label="Glucose (Plasma glucose concentration)"),
-        gr.Number(label="Insulin (2-Hour serum insulin)"),
-        gr.Number(label="BMI (Body mass index)"),
-        gr.Number(label="Age (Years)")
+        gr.Number(label="👶 Pregnancies", value=0),
+        gr.Number(label="🩸 Glucose Level", value=120),
+        gr.Number(label="💓 Blood Pressure", value=70),
+        gr.Number(label="📏 Skin Thickness", value=20),
+        gr.Number(label="💉 Insulin", value=79),
+        gr.Number(label="⚖️ BMI", value=25.0),
+        gr.Number(label="🧬 Diabetes Pedigree Function", value=0.5),
+        gr.Number(label="🎂 Age", value=30),
     ],
-    outputs=gr.Text(label="Assessment Result"),
-    title="Diabetes Prediction System",
-    description="Enter the medical metrics to predict diabetes risk using a Decision Tree Machine Learning model."
+    outputs=gr.Textbox(label="Prediction Result"),
+    title="🩺 Diabetes Prediction System",
+    description="""
+Enter the patient's medical information below.
+The machine learning model will predict whether the patient is likely to have diabetes.
+""",
 )
-# ------------------------------------------
 
 if __name__ == "__main__":
-    # Render network configuration
-    interface.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))
+    interface.launch(
+        server_name="0.0.0.0",
+        server_port=int(os.environ.get("PORT", 7860))
+    )
