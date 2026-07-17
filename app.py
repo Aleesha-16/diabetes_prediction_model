@@ -3,7 +3,7 @@ import gradio as gr
 import joblib
 
 # Load the trained model
-diabetes_model = joblib.load("diabetes_prediction_model.pkl")
+diabetes_model = joblib.load("diabetes_prediction_model (3).pkl")
 
 
 def predict_diabetes(
