@@ -1,9 +1,17 @@
 import os
 import gradio as gr
 import joblib
+import numpy as np
 
 # Load trained model
 diabetes_model = joblib.load("diabetes_prediction_model.pkl")
+
+# Debug info
+try:
+    print("Model loaded successfully")
+    print("Expected features:", diabetes_model.n_features_in_)
+except Exception:
+    pass
 
 
 def predict_diabetes(
@@ -16,23 +24,27 @@ def predict_diabetes(
     diabetes_pedigree,
     age,
 ):
-    input_data = [[
-        pregnancies,
-        glucose,
-        blood_pressure,
-        skin_thickness,
-        insulin,
-        bmi,
-        diabetes_pedigree,
-        age
-    ]]
+    try:
+        input_data = np.array([[
+            float(pregnancies),
+            float(glucose),
+            float(blood_pressure),
+            float(skin_thickness),
+            float(insulin),
+            float(bmi),
+            float(diabetes_pedigree),
+            float(age)
+        ]])
 
-    prediction = diabetes_model.predict(input_data)[0]
+        prediction = diabetes_model.predict(input_data)
 
-    if prediction == 1:
-        return "⚠️ Positive for Diabetes\n\nPlease consult a healthcare professional."
-    else:
-        return "✅ No Diabetes Detected"
+        if prediction[0] == 1:
+            return "⚠️ Positive for Diabetes\n\nPlease consult a healthcare professional."
+        else:
+            return "✅ No Diabetes Detected"
+
+    except Exception as e:
+        return f"Prediction Error: {str(e)}"
 
 
 demo = gr.Interface(
@@ -55,7 +67,8 @@ demo = gr.Interface(
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 7860))
+
     demo.launch(
         server_name="0.0.0.0",
-        server_port=port,
+        server_port=port
     )
